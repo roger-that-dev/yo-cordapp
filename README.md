@@ -43,7 +43,7 @@ And change directories to the newly cloned repo:
 
 It is recommended to checkout a milestone release of Corda. To do this you must run: 
 
-    git checkout release-M10.0
+    git checkout release-M10.1
 
 ### Snapshots
 
