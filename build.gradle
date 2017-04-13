@@ -127,7 +127,14 @@ publishing {
     }
 }
 
-task runYoRPC(type: JavaExec) {
+task runYoRPCNodeA(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'net.corda.yo.ClientKt'
+    args 'localhost:10006'
+}
+
+task runYoRPCNodeB(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'net.corda.yo.ClientKt'
+    args 'localhost:10009'
 }

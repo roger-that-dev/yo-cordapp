@@ -81,12 +81,24 @@ Sending a Yo:
 Showing all your Yo's:
 
      http://localhost:10010/api/yo/yos (NodeB)
+     
+Finding out who you are:
+
+    http://localhost:10010/api/yo/me (NodeB)
+
+Finding out who you can send Yo's! to:\
+
+    http://localhost:10010/api/yo/peers (NodeA, NodeB)
 
 ## Using the Example RPC Client
 
 Use the gradle command:
 
-     ./gradlew runYoRPC
+     ./gradlew runYoRPCNodeA
+     
+or 
+     
+     ./gradlew runYoRPCNodeB
 
 When running it should enumerate all previously received shows as well as show any new Yo's! 
 received as and when they are sent to you.

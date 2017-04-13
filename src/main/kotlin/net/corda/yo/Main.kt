@@ -25,15 +25,11 @@ fun main(args: Array<String>) {
     val user = User("user1", "test", permissions = setOf())
     driver(isDebug = true) {
         startNode("Controller", setOf(ServiceInfo(ValidatingNotaryService.Companion.type)))
-        val (nodeA, nodeB, nodeC) = Futures.allAsList(
+        val (nodeA, nodeB) = Futures.allAsList(
                 startNode("NodeA", rpcUsers = listOf(user)),
-                startNode("NodeB", rpcUsers = listOf(user)),
-                startNode("NodeC", rpcUsers = listOf(user))).getOrThrow()
-
+                startNode("NodeB", rpcUsers = listOf(user))).getOrThrow()
         startWebserver(nodeA)
         startWebserver(nodeB)
-        startWebserver(nodeC)
-
         waitForAllNodesToFinish()
     }
 }

@@ -10,7 +10,6 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.CordaPluginRegistry
 import net.corda.core.node.PluginServiceHub
-import net.corda.core.serialization.SerializationCustomization
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.ProgressTracker
 import net.corda.flows.FinalityFlow
@@ -82,8 +81,10 @@ class Yo : Contract {
         "No sending Yo's to yourself!" by (yo.target != yo.origin)
         "The Yo! must be signed by the sender." by (yo.origin.owningKey == command.signers.single())
     }
-    data class State(val origin: Party, val target: Party, val yo: String = "Yo!"): LinearState {
-        override val linearId: UniqueIdentifier get() = UniqueIdentifier()
+    data class State(val origin: Party,
+                     val target: Party,
+                     val yo: String = "Yo!",
+                     override val linearId: UniqueIdentifier = UniqueIdentifier()): LinearState {
         override val participants: List<CompositeKey> get() = listOf(target.owningKey)
         override val contract get() = Yo()
         override fun isRelevant(ourKeys: Set<PublicKey>) = ourKeys.intersect(participants.keys).isNotEmpty()
@@ -97,5 +98,4 @@ class YoPlugin : CordaPluginRegistry() {
     override val requiredFlows = mapOf(YoFlow::class.java.name to setOf(Party::class.java.name))
     override val servicePlugins: List<Function<PluginServiceHub, out Any>> = listOf()
     override val staticServeDirs = mapOf("yo" to javaClass.classLoader.getResource("yoWeb").toExternalForm())
-    override fun customizeSerialization(custom: SerializationCustomization) = true
 }

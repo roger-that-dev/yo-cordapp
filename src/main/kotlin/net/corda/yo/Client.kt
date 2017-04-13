@@ -7,10 +7,6 @@ import net.corda.client.rpc.CordaRPCClient
 import org.slf4j.Logger
 import rx.Observable
 
-/**
- * Demonstration of how to use the CordaRPCClient to connect to a Corda Node and
- * stream some State data from the node.
- */
 fun main(args: Array<String>) {
     YoRPC().main(args)
 }
@@ -19,20 +15,16 @@ private class YoRPC {
     companion object {
         val logger: Logger = loggerFor<YoRPC>()
     }
-
     fun main(args: Array<String>) {
         require(args.size == 1) { "Usage: TemplateClientRPC <node address:port>" }
         val nodeAddress = HostAndPort.fromString(args[0])
         val client = CordaRPCClient(nodeAddress)
-
         // Can be amended in the com.template.MainKt file.
         client.start("user1", "test")
         val proxy = client.proxy()
-
         // Grab all signed transactions and all future signed transactions.
         val (transactions: List<SignedTransaction>, futureTransactions: Observable<SignedTransaction>) =
                 proxy.verifiedTransactions()
-
         // Log the existing TemplateStates and listen for new ones.
         futureTransactions.startWith(transactions).toBlocking().subscribe { transaction ->
             transaction.tx.outputs.forEach { output ->
