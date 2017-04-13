@@ -86,7 +86,7 @@ Finding out who you are:
 
     http://localhost:10010/api/yo/me (NodeB)
 
-Finding out who you can send Yo's! to:\
+Finding out who you can send Yo's! to:
 
     http://localhost:10010/api/yo/peers (NodeA, NodeB)
 
