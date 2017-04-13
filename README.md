@@ -90,7 +90,7 @@ Finding out who you can send Yo's! to:
 
     http://localhost:10010/api/yo/peers (NodeA, NodeB)
 
-## Using the Example RPC Client
+## Using the RPC Client
 
 Use the gradle command:
 
@@ -98,12 +98,14 @@ Use the gradle command:
      
 or 
      
-     ./gradlew runYoRPCNodeB
+     ./gradlew runYoRPCNodeB (for NodeB)
 
-When running it should enumerate all previously received shows as well as show any new Yo's! 
-received as and when they are sent to you.
+When running it should enumerate all previously received Yo's! as well as show any new Yo's! 
+received when they are sent to you.
 
 ## Using the node shell
+
+The node shell is a great way to test your CorDapps without having to create a user interface. 
 
 When the nodes are up and running, use the following command to send a Yo! to another node:
 
