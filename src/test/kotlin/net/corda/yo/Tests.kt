@@ -94,6 +94,7 @@ class YoTests {
         assertEquals(bTx, stx)
         print("$bTx == $stx")
         val bYo = b.vault.unconsumedStates<Yo.State>().single().state.data
+        // Strings match but the linearId's will differ.
         assertEquals(bYo.toString(), yo.toString())
         print("$bYo == $yo")
     }
