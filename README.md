@@ -23,7 +23,7 @@ And change directories to the newly cloned repo:
 
      cd yo-cordapp
 
-##Building the Yo! CorDapp:
+## Building the Yo! CorDapp:
 
 **Unix:** 
 
