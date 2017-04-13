@@ -109,11 +109,11 @@ When the nodes are up and running, use the following command to send a Yo! to an
 
     flow start YoFlow target: [NODE_NAME]
     
-Where `NODE_NAME` is NodeA or NodeB. Note you can't sent a Yo! to yourself because that's not cool.
+Where `NODE_NAME` is NodeA or NodeB. The space after the `:` is required. Note you can't sent a Yo! to yourself because that's not cool.
 
 To see all your Yo's! use:
 
-    rpc vaultAndUpdates
+    run vaultAndUpdates
 
 ## Further reading
 
