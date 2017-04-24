@@ -4,6 +4,8 @@ import net.corda.core.contracts.*
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.getOrThrow
 import net.corda.core.node.services.unconsumedStates
+import net.corda.core.utilities.ALICE
+import net.corda.core.utilities.BOB
 import net.corda.testing.*
 import net.corda.testing.node.MockNetwork
 import org.junit.After

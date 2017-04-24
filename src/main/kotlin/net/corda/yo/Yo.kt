@@ -2,10 +2,8 @@ package net.corda.yo
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.*
-import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.Party
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.keys
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.CordaPluginRegistry
@@ -15,7 +13,10 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.flows.FinalityFlow
 import java.security.PublicKey
 import java.util.function.Function
-import javax.ws.rs.*
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -65,6 +66,7 @@ class YoFlow(val target: Party): FlowLogic<SignedTransaction>() {
         progressTracker.currentStep = VERIFYING
         signedYo.tx.toLedgerTransaction(serviceHub).verify()
         progressTracker.currentStep = SENDING
+        listOf("a").spliterator()
         return subFlow(FinalityFlow(signedYo, setOf(target))).single()
     }
 }
@@ -75,19 +77,19 @@ class Yo : Contract {
     override val legalContractReference: SecureHash = SecureHash.sha256("Yo!")
     override fun verify(tx: TransactionForContract) = requireThat {
         val command = tx.commands.requireSingleCommand<Send>()
-        "There can be no inputs when Yo'ing other parties." by (tx.inputs.isEmpty())
-        "There must be one output: The Yo!" by (tx.outputs.size == 1)
+        "There can be no inputs when Yo'ing other parties." using (tx.inputs.isEmpty())
+        "There must be one output: The Yo!" using (tx.outputs.size == 1)
         val yo = tx.outputs.single() as Yo.State
-        "No sending Yo's to yourself!" by (yo.target != yo.origin)
-        "The Yo! must be signed by the sender." by (yo.origin.owningKey == command.signers.single())
+        "No sending Yo's to yourself!" using (yo.target != yo.origin)
+        "The Yo! must be signed by the sender." using (yo.origin.owningKey == command.signers.single())
     }
     data class State(val origin: Party,
                      val target: Party,
                      val yo: String = "Yo!",
                      override val linearId: UniqueIdentifier = UniqueIdentifier()): LinearState {
-        override val participants: List<CompositeKey> get() = listOf(target.owningKey)
+        override val participants get() = listOf(target.owningKey)
         override val contract get() = Yo()
-        override fun isRelevant(ourKeys: Set<PublicKey>) = ourKeys.intersect(participants.keys).isNotEmpty()
+        override fun isRelevant(ourKeys: Set<PublicKey>) = ourKeys.intersect(participants).isNotEmpty()
         override fun toString() = "${origin.name}: $yo"
     }
 }
