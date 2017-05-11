@@ -103,6 +103,7 @@ class Yo : Contract {
     // Command.
     class Send : TypeOnlyCommandData()
 
+    // Legal prose.
     override val legalContractReference: SecureHash = SecureHash.sha256("Yo!")
 
     // Contract code.
