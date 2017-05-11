@@ -2,6 +2,8 @@
 
 # Yo! CorDapp
 
+**NOTE:** This CorDapp targets Corda M11.
+
 Send Yo's! to all your friends running Corda nodes!
 
 ## Pre-Requisites
