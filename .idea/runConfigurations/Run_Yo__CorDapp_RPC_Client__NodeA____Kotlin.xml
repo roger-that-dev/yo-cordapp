@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Template RPC Client - Kotlin" type="JetRunConfigurationType" factoryName="Kotlin" singleton="true">
+  <configuration default="false" name="Run Yo! CorDapp RPC Client (NodeA) - Kotlin" type="JetRunConfigurationType" factoryName="Kotlin" singleton="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
     <option name="MAIN_CLASS_NAME" value="net.corda.yo.ClientKt" />
     <option name="VM_PARAMETERS" value="" />
@@ -8,7 +8,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" />
     <option name="PASS_PARENT_ENVS" value="true" />
-    <module name="cordapp-template_main" />
+    <module name="yo-cordapp_main" />
     <envs />
     <method />
   </configuration>
