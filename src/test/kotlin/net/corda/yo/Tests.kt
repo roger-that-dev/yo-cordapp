@@ -1,12 +1,16 @@
 package net.corda.yo
 
-import net.corda.core.contracts.*
-import net.corda.core.crypto.CompositeKey
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.DUMMY_PROGRAM_ID
+import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.getOrThrow
+import net.corda.core.identity.AbstractParty
 import net.corda.core.node.services.unconsumedStates
 import net.corda.core.utilities.ALICE
 import net.corda.core.utilities.BOB
-import net.corda.testing.*
+import net.corda.testing.ALICE_PUBKEY
+import net.corda.testing.MINI_CORP_PUBKEY
+import net.corda.testing.ledger
 import net.corda.testing.node.MockNetwork
 import org.junit.After
 import org.junit.Before
@@ -40,7 +44,7 @@ class YoTests {
         // A pre-made dummy state.
         val dummyState = object : ContractState {
             override val contract get() = DUMMY_PROGRAM_ID
-            override val participants: List<CompositeKey> get() = listOf()
+            override val participants: List<AbstractParty> get() = listOf()
         }
         // A pre-made dummy command.
         class DummyCommand : TypeOnlyCommandData()

@@ -3,13 +3,14 @@ package net.corda.yo
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.client.rpc.notUsed
 import net.corda.core.contracts.*
-import net.corda.core.crypto.Party
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.getOrThrow
+import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.CordaPluginRegistry
-import net.corda.core.node.PluginServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.ProgressTracker
 import net.corda.flows.FinalityFlow
@@ -67,6 +68,8 @@ class YoApi(val services: CordaRPCOps) {
 }
 
 // Flow.
+@InitiatingFlow
+@StartableByRPC
 class YoFlow(val target: Party): FlowLogic<SignedTransaction>() {
 
     override val progressTracker: ProgressTracker = YoFlow.tracker()
@@ -84,16 +87,15 @@ class YoFlow(val target: Party): FlowLogic<SignedTransaction>() {
         val notary = serviceHub.networkMapCache.notaryNodes.single().notaryIdentity
 
         progressTracker.currentStep = CREATING
-        val signedYo = TransactionType.General.Builder(notary)
+        val builder = TransactionType.General.Builder(notary)
                 .withItems(Yo.State(me, target), Command(Yo.Send(), listOf(me.owningKey)))
-                .signWith(serviceHub.legalIdentityKey)
-                .toSignedTransaction(true)
+        val stx = serviceHub.signInitialTransaction(builder)
 
         progressTracker.currentStep = VERIFYING
-        signedYo.tx.toLedgerTransaction(serviceHub).verify()
+        stx.tx.toLedgerTransaction(serviceHub).verify()
 
         progressTracker.currentStep = SENDING
-        return subFlow(FinalityFlow(signedYo, setOf(target))).single()
+        return subFlow(FinalityFlow(stx)).single()
     }
 }
 
@@ -121,9 +123,9 @@ class Yo : Contract {
                      val target: Party,
                      val yo: String = "Yo!",
                      override val linearId: UniqueIdentifier = UniqueIdentifier()): LinearState {
-        override val participants get() = listOf(target.owningKey)
+        override val participants get() = listOf(target)
         override val contract get() = Yo()
-        override fun isRelevant(ourKeys: Set<PublicKey>) = ourKeys.intersect(participants).isNotEmpty()
+        override fun isRelevant(ourKeys: Set<PublicKey>) = ourKeys.intersect(participants.map { it.owningKey }).isNotEmpty()
         override fun toString() = "${origin.name}: $yo"
     }
 }
@@ -131,7 +133,5 @@ class Yo : Contract {
 // Plugin.
 class YoPlugin : CordaPluginRegistry() {
     override val webApis = listOf(Function(::YoApi))
-    override val requiredFlows = mapOf(YoFlow::class.java.name to setOf(Party::class.java.name))
-    override val servicePlugins: List<Function<PluginServiceHub, out Any>> = listOf()
     override val staticServeDirs = mapOf("yo" to javaClass.classLoader.getResource("yoWeb").toExternalForm())
 }

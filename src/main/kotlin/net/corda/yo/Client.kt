@@ -21,8 +21,7 @@ private class YoRPC {
         val nodeAddress = HostAndPort.fromString(args[0])
         val client = CordaRPCClient(nodeAddress)
         // Can be amended in the com.template.MainKt file.
-        client.start("user1", "test")
-        val proxy = client.proxy()
+        val proxy = client.start("user1", "test").proxy
         // Grab all signed transactions and all future signed transactions.
         val (transactions: List<SignedTransaction>, futureTransactions: Observable<SignedTransaction>) =
                 proxy.verifiedTransactions()
