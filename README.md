@@ -78,7 +78,7 @@ terminal window or in the `build.gradle` file.
 
 Sending a Yo:
 
-    http://localhost:10007/api/yo/yo?target=NodeB (From NodeA to NodeB)
+    http://localhost:10007/api/yo/yo?target=CN=NodeB,O=NodeB,L=London,C=UK (From NodeA to NodeB - we use NodeB's X500 name)
 
 Showing all your Yo's:
 
@@ -113,7 +113,11 @@ When the nodes are up and running, use the following command to send a Yo! to an
 
     flow start YoFlow target: [NODE_NAME]
     
-Where `NODE_NAME` is NodeA or NodeB. The space after the `:` is required. Note you can't sent a Yo! to yourself because that's not cool.
+Where `NODE_NAME` is the X500 name of NodeA or NodeB. The space after the `:` is required. Note you can't sent a Yo! to yourself because that's not cool! X500 names come in the format of:
+
+    CN=<NODE_NAME>,O=<NODE_NAME>,L=<CITY>,C=<COUNTRY>
+    
+Enumerate all your peers using `ttp://localhost:10010/api/yo/peers` to get the X500 name of the node you want to Yo!     
 
 To see all your Yo's! use:
 
