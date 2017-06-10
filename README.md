@@ -2,7 +2,7 @@
 
 # Yo! CorDapp
 
-**NOTE:** This CorDapp targets Corda M11.
+**NOTE:** This CorDapp targets Corda M12.1.
 
 Send Yo's! to all your friends running Corda nodes!
 
