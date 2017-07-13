@@ -11,12 +11,20 @@ import net.corda.core.getOrThrow
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.CordaPluginRegistry
+import net.corda.core.schemas.MappedSchema
+import net.corda.core.schemas.PersistentState
+import net.corda.core.schemas.QueryableState
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.flows.FinalityFlow
+import net.corda.webserver.services.WebServerPluginRegistry
+import org.bouncycastle.asn1.x500.X500Name
 import rx.Observable
-import java.security.PublicKey
 import java.util.function.Function
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.Table
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -39,7 +47,7 @@ class YoApi(val services: CordaRPCOps) {
     fun yo(@QueryParam(value = "target") target: String): Response {
         val (status, message) = try {
             // Is the 'target' valid?
-            val toYo = services.partyFromName(target) ?: throw IllegalArgumentException("$target is unknown.")
+            val toYo = services.partyFromX500Name(X500Name(target)) ?: throw Exception("Party not recognised.")
             // Start the flow.
             val flowHandle = services.startFlowDynamic(YoFlow::class.java, toYo)
             flowHandle.use { it.returnValue.getOrThrow() }
@@ -54,7 +62,7 @@ class YoApi(val services: CordaRPCOps) {
     @GET
     @Path("yos")
     @Produces(MediaType.APPLICATION_JSON)
-    fun yos() = services.vaultAndUpdates().justSnapshot.filter { it.state.data is Yo.State }
+    fun yos() = services.vaultQuery(Yo.State::class.java).states
 
     @GET
     @Path("me")
@@ -76,26 +84,33 @@ class YoFlow(val target: Party): FlowLogic<SignedTransaction>() {
 
     companion object {
         object CREATING : ProgressTracker.Step("Creating a new Yo!")
+        object SIGNING : ProgressTracker.Step("Verifying the Yo!")
         object VERIFYING : ProgressTracker.Step("Verifying the Yo!")
-        object SENDING : ProgressTracker.Step("Sending the Yo!")
-        fun tracker() = ProgressTracker(CREATING, VERIFYING, SENDING)
+        object FINALISING : ProgressTracker.Step("Sending the Yo!") {
+            override fun childProgressTracker() = FinalityFlow.tracker()
+        }
+
+        fun tracker() = ProgressTracker(CREATING, SIGNING, VERIFYING, FINALISING)
     }
 
     @Suspendable
     override fun call(): SignedTransaction {
+        progressTracker.currentStep = CREATING
+
         val me = serviceHub.myInfo.legalIdentity
         val notary = serviceHub.networkMapCache.notaryNodes.single().notaryIdentity
+        val command = Command(Yo.Send(), listOf(me.owningKey))
+        val state = Yo.State(me, target)
+        val utx = TransactionBuilder(notary = notary).withItems(state, command)
 
-        progressTracker.currentStep = CREATING
-        val builder = TransactionType.General.Builder(notary)
-                .withItems(Yo.State(me, target), Command(Yo.Send(), listOf(me.owningKey)))
-        val stx = serviceHub.signInitialTransaction(builder)
+        progressTracker.currentStep = SIGNING
+        val stx = serviceHub.signInitialTransaction(utx)
 
         progressTracker.currentStep = VERIFYING
         stx.tx.toLedgerTransaction(serviceHub).verify()
 
-        progressTracker.currentStep = SENDING
-        return subFlow(FinalityFlow(stx)).single()
+        progressTracker.currentStep = FINALISING
+        return subFlow(FinalityFlow(stx, FINALISING.childProgressTracker())).single()
     }
 }
 
@@ -121,17 +136,27 @@ class Yo : Contract {
     // State.
     data class State(val origin: Party,
                      val target: Party,
-                     val yo: String = "Yo!",
-                     override val linearId: UniqueIdentifier = UniqueIdentifier()): LinearState {
+                     val yo: String = "Yo!") : ContractState, QueryableState {
         override val participants get() = listOf(target)
         override val contract get() = Yo()
-        override fun isRelevant(ourKeys: Set<PublicKey>) = ourKeys.intersect(participants.map { it.owningKey }).isNotEmpty()
         override fun toString() = "${origin.name}: $yo"
+        override fun supportedSchemas() = listOf(YoSchemaV1)
+        override fun generateMappedObject(schema: MappedSchema) = YoSchemaV1.YoEntity(this)
+
+        object YoSchemaV1 : MappedSchema(Yo.State::class.java, 1, listOf(YoEntity::class.java)) {
+            @Entity @Table(name = "yos")
+            class YoEntity(yo: State) : PersistentState() {
+                @Column var origin: String = yo.origin.name.toString()
+                @Column var target: String = yo.target.name.toString()
+                @Column var yo: String = yo.yo
+            }
+        }
     }
 }
 
 // Plugin.
-class YoPlugin : CordaPluginRegistry() {
+class YoPlugin : CordaPluginRegistry(), WebServerPluginRegistry {
     override val webApis = listOf(Function(::YoApi))
     override val staticServeDirs = mapOf("yo" to javaClass.classLoader.getResource("yoWeb").toExternalForm())
+    override val requiredSchemas: Set<MappedSchema> = setOf(Yo.State.YoSchemaV1)
 }

@@ -2,7 +2,7 @@
 
 # Yo! CorDapp
 
-**NOTE:** This CorDapp targets Corda M12.1.
+**NOTE:** This CorDapp targets Corda M13.0.
 
 Send Yo's! to all your friends running Corda nodes!
 
@@ -29,11 +29,11 @@ And change directories to the newly cloned repo:
 
 **Unix:** 
 
-     ./gradlew deployNodes
+     ./gradlew clean deployNodes
 
 **Windows:**
 
-     gradlew.bat deployNodes
+     gradlew.bat clean deployNodes
 
 ## Running the Nodes:
 
@@ -113,12 +113,9 @@ When the nodes are up and running, use the following command to send a Yo! to an
 
     flow start YoFlow target: [NODE_NAME]
     
-Where `NODE_NAME` is the X500 name of NodeA or NodeB. The space after the `:` is required. Note you can't sent a Yo! to yourself because that's not cool! X500 names come in the format of:
-
-    CN=<NODE_NAME>,O=<NODE_NAME>,L=<CITY>,C=<COUNTRY>
-    
-Enumerate all your peers using `ttp://localhost:10010/api/yo/peers` to get the X500 name of the node you want to Yo!     
-
+Where `NODE_NAME` is 'NodeA' or 'NodeB'. The space after the `:` is required. you are not required to use the full X500 name in the node shell.
+Note you can't sent a Yo! to yourself because that's not cool!
+      
 To see all your Yo's! use:
 
     run vaultAndUpdates

@@ -8,6 +8,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.node.services.unconsumedStates
 import net.corda.core.utilities.ALICE
 import net.corda.core.utilities.BOB
+import net.corda.node.utilities.transaction
 import net.corda.testing.ALICE_PUBKEY
 import net.corda.testing.MINI_CORP_PUBKEY
 import net.corda.testing.ledger
@@ -99,9 +100,10 @@ class YoTests {
         val bTx = b.storage.validatedTransactions.getTransaction(stx.id)
         assertEquals(bTx, stx)
         print("$bTx == $stx")
-        val bYo = b.vault.unconsumedStates<Yo.State>().single().state.data
-        // Strings match but the linearId's will differ.
-        assertEquals(bYo.toString(), yo.toString())
-        print("$bYo == $yo")
+        b.database.transaction {
+            val bYo = b.vault.unconsumedStates<Yo.State>().single().state.data
+            assertEquals(bYo.toString(), yo.toString())
+            print("$bYo == $yo")
+        }
     }
 }
