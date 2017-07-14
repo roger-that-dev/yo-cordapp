@@ -5,7 +5,10 @@ import net.corda.core.contracts.DUMMY_PROGRAM_ID
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.getOrThrow
 import net.corda.core.identity.AbstractParty
-import net.corda.core.node.services.unconsumedStates
+import net.corda.core.node.services.queryBy
+import net.corda.yo.Yo.State.YoSchemaV1.YoEntity
+import net.corda.core.node.services.vault.QueryCriteria.VaultCustomQueryCriteria
+import net.corda.core.node.services.vault.builder
 import net.corda.core.utilities.ALICE
 import net.corda.core.utilities.BOB
 import net.corda.node.utilities.transaction
@@ -99,11 +102,18 @@ class YoTests {
         // Check yo transaction is stored in the storage service and the state in the vault.
         val bTx = b.storage.validatedTransactions.getTransaction(stx.id)
         assertEquals(bTx, stx)
-        print("$bTx == $stx")
+        print("bTx == $stx\n")
         b.database.transaction {
-            val bYo = b.vault.unconsumedStates<Yo.State>().single().state.data
+            // simple query
+            val bYo = b.vaultQuery.queryBy<Yo.State>().states.single().state.data
             assertEquals(bYo.toString(), yo.toString())
-            print("$bYo == $yo")
+            print("$bYo == $yo\n")
+            // Using custom criteria directly referencing schema entity attribute
+            val expression = builder { YoEntity::yo.equal("Yo!") }
+            val customQuery = VaultCustomQueryCriteria(expression)
+            val bYo2 = b.vaultQuery.queryBy<Yo.State>(customQuery).states.single().state.data
+            assertEquals(bYo2.yo, yo.yo)
+            print("$bYo2 == $yo\n")
         }
     }
 }
