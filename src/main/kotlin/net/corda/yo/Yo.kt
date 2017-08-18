@@ -155,8 +155,11 @@ class Yo : Contract {
 }
 
 // Plugin.
-class YoPlugin : CordaPluginRegistry(), WebServerPluginRegistry {
+class YoPlugin : CordaPluginRegistry() {
+    override val requiredSchemas: Set<MappedSchema> = setOf(Yo.State.YoSchemaV1)
+}
+
+class YoWebPlugin : WebServerPluginRegistry {
     override val webApis = listOf(Function(::YoApi))
     override val staticServeDirs = mapOf("yo" to javaClass.classLoader.getResource("yoWeb").toExternalForm())
-    override val requiredSchemas: Set<MappedSchema> = setOf(Yo.State.YoSchemaV1)
 }
