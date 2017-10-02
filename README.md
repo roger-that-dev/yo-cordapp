@@ -2,7 +2,7 @@
 
 # Yo! CorDapp
 
-**NOTE:** This CorDapp targets Corda M13.0.
+**NOTE:** This CorDapp targets Corda v1.0.
 
 Send Yo's! to all your friends running Corda nodes!
 
@@ -63,8 +63,7 @@ run the nodes with:
 You should now have three Corda nodes running on your machine serving
 the Yo! CorDapp.
 
-Six windows will open in the terminal, two for each one with one being the node
-shell and the other being the web server.
+Five windows will open in the terminal. One for each node's node shell, plus webservers for Party A and Party B.
 
 ## Interacting with the CorDapp via HTTP
 
@@ -76,31 +75,31 @@ terminal window or in the `build.gradle` file.
      NodeA: localhost:10007
      NodeB: localhost:10010
 
-Sending a Yo:
+Sending a Yo from PartyA to PartyB (we use PartyB's X500 name):
 
-    http://localhost:10007/api/yo/yo?target=CN=NodeB,O=NodeB,L=London,C=UK (From NodeA to NodeB - we use NodeB's X500 name)
+    http://localhost:10007/api/yo/yo?target=O=PartyB,L=New York,C=US
 
-Showing all your Yo's:
+Showing all of Party B's Yo's:
 
-     http://localhost:10010/api/yo/yos (NodeB)
+     http://localhost:10010/api/yo/yos
      
-Finding out who you are:
+Finding out who Party B is:
 
-    http://localhost:10010/api/yo/me (NodeB)
+    http://localhost:10010/api/yo/me
 
-Finding out who you can send Yo's! to:
+Finding out who Party B can send Yo's! to:
 
-    http://localhost:10010/api/yo/peers (NodeA, NodeB)
+    http://localhost:10010/api/yo/peers
 
 ## Using the RPC Client
 
-Use the gradle command:
+Use the gradle command (for Party A):
 
      ./gradlew runYoRPCNodeA
      
-or 
+or (for Party B):
      
-     ./gradlew runYoRPCNodeB (for NodeB)
+     ./gradlew runYoRPCNodeB
 
 When running it should enumerate all previously received Yo's! as well as show any new Yo's! 
 received when they are sent to you.
@@ -113,14 +112,13 @@ When the nodes are up and running, use the following command to send a Yo! to an
 
     flow start YoFlow target: [NODE_NAME]
     
-Where `NODE_NAME` is 'NodeA' or 'NodeB'. The space after the `:` is required. you are not required to use the full X500 name in the node shell.
-Note you can't sent a Yo! to yourself because that's not cool!
-      
-To see all your Yo's! use:
+Where `NODE_NAME` is 'PartyA' or 'PartyB'. The space after the `:` is required. You are not required to use the full 
+X500 name in the node shell. Note you can't sent a Yo! to yourself because that's not cool!
 
-    run vaultAndUpdates
+To see all the Yo's! in your vault:
+
+    run vaultQuery contractStateType: net.corda.yo.YoState
 
 ## Further reading
 
-Tutorials and developer docs for CorDapps and Corda are
-[here](https://docs.corda.net/).
+Tutorials and developer docs for CorDapps and Corda are [here](https://docs.corda.net/).

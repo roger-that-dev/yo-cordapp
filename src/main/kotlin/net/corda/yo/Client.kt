@@ -1,11 +1,9 @@
 package net.corda.yo
 
-import com.google.common.net.HostAndPort
 import net.corda.client.rpc.CordaRPCClient
-import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.loggerFor
 import org.slf4j.Logger
-import rx.Observable
 
 fun main(args: Array<String>) {
     YoRPC().main(args)
@@ -18,17 +16,16 @@ private class YoRPC {
 
     fun main(args: Array<String>) {
         require(args.size == 1) { "Usage: YoRPC <node address:port>" }
-        val nodeAddress = HostAndPort.fromString(args[0])
+        val nodeAddress = NetworkHostAndPort.parse(args[0])
         val client = CordaRPCClient(nodeAddress)
         // Can be amended in the com.template.MainKt file.
         val proxy = client.start("user1", "test").proxy
         // Grab all signed transactions and all future signed transactions.
-        val (transactions: List<SignedTransaction>, futureTransactions: Observable<SignedTransaction>) =
-                proxy.verifiedTransactions()
+        val (transactions, futureTransactions) = proxy.internalVerifiedTransactionsFeed()
         // Log the existing Yo's and listen for new ones.
         futureTransactions.startWith(transactions).toBlocking().subscribe { transaction ->
             transaction.tx.outputs.forEach { output ->
-                val state = output.data as Yo.State
+                val state = output.data as YoState
                 logger.info(state.toString())
             }
         }
