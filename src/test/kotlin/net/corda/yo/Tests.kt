@@ -65,6 +65,16 @@ class YoFlowTests {
 }
 
 class YoContractTests {
+    @Before
+    fun setup() {
+        setCordappPackages("net.corda.yo", "net.corda.testing.contracts")
+    }
+
+    @After
+    fun tearDown() {
+        unsetCordappPackages()
+    }
+
     @Test
     fun yoTransactionMustBeWellFormed() {
         // A pre-made Yo to Bob.
@@ -76,7 +86,6 @@ class YoContractTests {
                 input(DUMMY_PROGRAM_ID) { DummyState() }
                 command(ALICE_PUBKEY) { YoContract.Send() }
                 output(YO_CONTRACT_ID) { yo }
-                attachments(DUMMY_PROGRAM_ID, YO_CONTRACT_ID)
                 this.failsWith("There can be no inputs when Yo'ing other parties.")
             }
             // Wrong command.
