@@ -75,11 +75,11 @@ terminal window or in the `build.gradle` file.
      NodeA: localhost:10007
      NodeB: localhost:10010
 
-Sending a Yo from PartyA to PartyB (we use PartyB's X500 name):
+Sending a Yo! from Party A to Party B (we use Party B's X500 name):
 
     http://localhost:10007/api/yo/yo?target=O=PartyB,L=New York,C=US
 
-Showing all of Party B's Yo's:
+Showing all of Party B's Yo's!:
 
      http://localhost:10010/api/yo/yos
      

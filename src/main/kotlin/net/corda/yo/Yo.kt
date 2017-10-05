@@ -43,7 +43,7 @@ class YoApi(val rpcOps: CordaRPCOps) {
             val flowHandle = rpcOps.startFlowDynamic(YoFlow::class.java, toYo)
             flowHandle.use { it.returnValue.getOrThrow() }
             // Return the response.
-            Response.Status.CREATED to "Yo just send a Yo! to ${toYo.name}"
+            Response.Status.CREATED to "You just sent a Yo! to ${toYo.name}"
         } catch (e: Exception) {
             Response.Status.BAD_REQUEST to e.message
         }
