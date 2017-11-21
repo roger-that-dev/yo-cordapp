@@ -6,7 +6,6 @@ import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
-import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.schemas.MappedSchema
@@ -35,15 +34,22 @@ class YoApi(val rpcOps: CordaRPCOps) {
     @GET
     @Path("yo")
     @Produces(MediaType.APPLICATION_JSON)
-    fun yo(@QueryParam(value = "target") target: CordaX500Name?): Response {
+    fun yo(@QueryParam(value = "target") target: String): Response {
         val (status, message) = try {
-            // Is the 'target' valid?
-            val toYo = rpcOps.wellKnownPartyFromX500Name(target!!) ?: throw Exception("Party not recognised.")
-            // Start the flow.
-            val flowHandle = rpcOps.startFlowDynamic(YoFlow::class.java, toYo)
-            flowHandle.use { it.returnValue.getOrThrow() }
+            // Look-up the 'target'.
+            val matches = rpcOps.partiesFromName(target, exactMatch = true)
+
+            // We only want one result!
+            val to: Party = when {
+                matches.isEmpty() -> throw IllegalArgumentException("Target string doesn't match any nodes on the network.")
+                matches.size > 1 -> throw IllegalArgumentException("Target string matches multiple nodes on the network.")
+                else -> matches.single()
+            }
+
+            // Start the flow, block and wait for the response.
+            val result = rpcOps.startFlowDynamic(YoFlow::class.java, to).returnValue.getOrThrow()
             // Return the response.
-            Response.Status.CREATED to "You just sent a Yo! to ${toYo.name}"
+            Response.Status.CREATED to "You just sent a Yo! to ${to.name} (Transaction ID: ${result.tx.id})"
         } catch (e: Exception) {
             Response.Status.BAD_REQUEST to e.message
         }

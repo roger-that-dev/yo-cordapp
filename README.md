@@ -11,8 +11,8 @@ Send Yo's! to all your friends running Corda nodes!
 You will need the following installed on your machine before you can start:
 
 * Latest [JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) 
-  installed and available on your path.
-* Latest version of [IntelliJ IDEA](https://www.jetbrains.com/idea/download/)
+  installed and available on your path
+* [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) minimum version 2017.1
 * git
 
 ## Getting Set Up
@@ -75,9 +75,10 @@ terminal window or in the `build.gradle` file.
      NodeA: localhost:10007
      NodeB: localhost:10010
 
-Sending a Yo! from Party A to Party B (we use Party B's X500 name):
+Sending a Yo! from Party A to Party B (we use Party B's X500 organisation. You do not need to use the whole X500 name,
+using only the organisation works. In this case: PartyA, PartyB, Controller, etc.):
 
-    http://localhost:10007/api/yo/yo?target=O=PartyB,L=New York,C=US
+    http://localhost:10007/api/yo/yo?target=O=PartyB
 
 Showing all of Party B's Yo's!:
 
@@ -112,8 +113,8 @@ When the nodes are up and running, use the following command to send a Yo! to an
 
     flow start YoFlow target: [NODE_NAME]
     
-Where `NODE_NAME` is 'PartyA' or 'PartyB'. The space after the `:` is required. You are not required to use the full 
-X500 name in the node shell. Note you can't sent a Yo! to yourself because that's not cool!
+Where `NODE_NAME` is 'PartyA' or 'PartyB'. The space after the `:` is required. As with the web API, you are not 
+required to use the full X500 name in the node shell. Note you can't sent a Yo! to yourself because that's not cool!
 
 To see all the Yo's! in your vault:
 
