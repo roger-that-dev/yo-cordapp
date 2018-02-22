@@ -1,15 +1,15 @@
 package net.corda.yo
 
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria.VaultCustomQueryCriteria
 import net.corda.core.node.services.vault.builder
 import net.corda.core.utilities.getOrThrow
-import net.corda.node.internal.StartedNode
-import net.corda.testing.*
-import net.corda.testing.contracts.DUMMY_PROGRAM_ID
+import net.corda.testing.contracts.DummyContract
 import net.corda.testing.contracts.DummyState
-import net.corda.testing.node.MockNetwork
-import net.corda.testing.node.MockNetwork.MockNode
+import net.corda.testing.core.DummyCommandData
+import net.corda.testing.core.TestIdentity
+import net.corda.testing.node.*
 import net.corda.yo.YoState.YoSchemaV1.PersistentYoState
 import org.junit.After
 import org.junit.Before
@@ -17,39 +17,36 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class YoFlowTests {
-    lateinit var net: MockNetwork
-    lateinit var a: StartedNode<MockNode>
-    lateinit var b: StartedNode<MockNode>
+    lateinit var network: MockNetwork
+    lateinit var a: StartedMockNode
+    lateinit var b: StartedMockNode
 
     @Before
     fun setup() {
-        setCordappPackages("net.corda.yo")
-        net = MockNetwork()
-        val nodes = net.createSomeNodes(2)
-        a = nodes.partyNodes[0]
-        b = nodes.partyNodes[1]
-        net.runNetwork()
+        network = MockNetwork(listOf("net.corda.yo"))
+        a = network.createPartyNode()
+        b = network.createPartyNode()
+        network.runNetwork()
     }
 
     @After
     fun tearDown() {
-        unsetCordappPackages()
-        net.stopNodes()
+        network.stopNodes()
     }
 
     @Test
     fun flowWorksCorrectly() {
         val yo = YoState(a.info.legalIdentities.first(), b.info.legalIdentities.first())
         val flow = YoFlow(b.info.legalIdentities.first())
-        val future = a.services.startFlow(flow).resultFuture
-        net.runNetwork()
+        val future = a.services.startFlow(flow)
+        network.runNetwork()
         val stx = future.getOrThrow()
         // Check yo transaction is stored in the storage service.
         val bTx = b.services.validatedTransactions.getTransaction(stx.id)
         assertEquals(bTx, stx)
         print("bTx == $stx\n")
         // Check yo state is stored in the vault.
-        b.database.transaction {
+        b.services.database.transaction {
             // Simple query.
             val bYo = b.services.vaultService.queryBy<YoState>().states.single().state.data
             assertEquals(bYo.toString(), yo.toString())
@@ -65,50 +62,45 @@ class YoFlowTests {
 }
 
 class YoContractTests {
-    @Before
-    fun setup() {
-        setCordappPackages("net.corda.yo", "net.corda.testing.contracts")
-    }
-
-    @After
-    fun tearDown() {
-        unsetCordappPackages()
-    }
+    private val ledgerServices = MockServices(listOf("net.corda.yo", "net.corda.testing.contracts"))
+    private val alice = TestIdentity(CordaX500Name("Alice", "New York", "US"))
+    private val bob = TestIdentity(CordaX500Name("Bob", "Tokyo", "JP"))
+    private val miniCorp = TestIdentity(CordaX500Name("MiniCorp", "New York", "US"))
 
     @Test
     fun yoTransactionMustBeWellFormed() {
         // A pre-made Yo to Bob.
-        val yo = YoState(ALICE, BOB)
+        val yo = YoState(alice.party, bob.party)
         // Tests.
-        ledger {
+        ledgerServices.ledger {
             // Input state present.
             transaction {
-                input(DUMMY_PROGRAM_ID) { DummyState() }
-                command(ALICE_PUBKEY) { YoContract.Send() }
-                output(YO_CONTRACT_ID) { yo }
+                input(DummyContract.PROGRAM_ID, DummyState())
+                command(alice.publicKey, YoContract.Send())
+                output(YO_CONTRACT_ID, yo)
                 this.failsWith("There can be no inputs when Yo'ing other parties.")
             }
             // Wrong command.
             transaction {
-                output(YO_CONTRACT_ID) { yo }
-                command(ALICE_PUBKEY) { DummyCommandData }
+                output(YO_CONTRACT_ID, yo)
+                command(alice.publicKey, DummyCommandData)
                 this.failsWith("")
             }
             // Command signed by wrong key.
             transaction {
-                output(YO_CONTRACT_ID) { yo }
-                command(MINI_CORP_PUBKEY) { YoContract.Send() }
+                output(YO_CONTRACT_ID, yo)
+                command(miniCorp.publicKey, YoContract.Send())
                 this.failsWith("The Yo! must be signed by the sender.")
             }
             // Sending to yourself is not allowed.
             transaction {
-                output(YO_CONTRACT_ID) { YoState(ALICE, ALICE) }
-                command(ALICE_PUBKEY) { YoContract.Send() }
+                output(YO_CONTRACT_ID, YoState(alice.party, alice.party))
+                command(alice.publicKey, YoContract.Send())
                 this.failsWith("No sending Yo's to yourself!")
             }
             transaction {
-                output(YO_CONTRACT_ID) { yo }
-                command(ALICE_PUBKEY) { YoContract.Send() }
+                output(YO_CONTRACT_ID, yo)
+                command(alice.publicKey, YoContract.Send())
                 this.verifies()
             }
         }
