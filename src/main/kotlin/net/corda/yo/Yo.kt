@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 // API.
-@Path("yo")
+@Path("submit_yo")
 class YoApi(val rpcOps: CordaRPCOps) {
     @GET
     @Path("yo")
